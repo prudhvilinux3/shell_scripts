@@ -1,0 +1,55 @@
+#!/bin/bash
+#############################
+#Author: Prudhvi 
+#Date: 28-10-2025
+#Purpose: Get details of resources for AWS instances
+##############################
+
+echo "Welcome to AWS EC2 instances list script"
+echo "Select the State of instances that you want to list:"
+echo "1. Running"
+echo "2. Stopped"
+echo "any other key to exit" 
+echo "Give input either '1' or '2' "
+read choice 
+
+
+total_instances=`aws ec2 describe-instances | jq -r '.Reservations[].Instances[].State.Name'`
+ echo -e "InstanceId\t\tInstanceType\tState\tSecurityGroups" #This is header statement
+#If option 1 (running) is selected
+if [ $choice == "1" ]; then
+	aws ec2 describe-instances | jq -r '
+  		.Reservations[].Instances[] 
+		| select(.State.Name == "running")
+  		|[
+			.InstanceId,
+			.InstanceType,
+			.State.Name,
+			(.SecurityGroups|map(.GroupName) | join(","))
+		] | @tsv 
+		'
+		#@tsv was used for table format 
+	#Get the count of running instances
+	running_count=`echo "$total_instances" | grep -i running | wc -l`
+	echo "Total running instances: $running_count"
+#If option 2 (stopped) is selected 
+elif [ $choice == "2" ] ; then
+	aws ec2 describe-instances | jq -r '
+	.Reservations[].Instances[] | select(.State.Name == "stopped") |[
+		.InstanceId,
+		.InstanceType,
+		.State.Name,
+		(.SecurityGroups | map(.GroupName) | join(","))
+		] | @tsv
+		'
+	#Get count of stopped instances
+	stopped_count=`echo "$total_instances" | grep -i stopped | wc -l`
+	echo "Total stopped instances: $stopped_count"
+	#check if any terminated instances and report
+	term_count=`echo "$total_instances" | grep -i terminated | wc -l `
+	if (( $term_count != 0 )) ; then
+		echo "Note: There are also teminated instances. Count: $term_count "
+	fi
+else 
+	exit 1;
+fi
