@@ -1,5 +1,13 @@
 #!/bin/bash
-#set -x 
+###################################################
+# Author: Prudhvi B				  #
+# Date: 29-10-2025				  #
+# Purpose: List the Collaborators of a repository #
+# Pre-req: declare the username and token outside #
+# 		the script			  #
+###################################################
+
+#set -x  # Do not enable this. THis will print the git api token of the user in the output. 
 # GitHub API URL
 API_URL="https://api.github.com"
 
